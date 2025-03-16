@@ -1,5 +1,8 @@
+
+https://youtu.be/bEpJphlpbsw?si=i7NwrZ7QKklt20Id
+
 # AriChain Bot
-   
+
 A Node.js-based automation tool for managing AriChain accounts, performing daily check-ins, and handling quiz interactions via Telegram.
 
 
