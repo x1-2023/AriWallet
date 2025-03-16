@@ -28,7 +28,7 @@ Follow these steps to set up the project locally:
 1. **Clone the Repository**:
    ```sh
    git clone https://github.com/Crowntec/AriWallet.git
-   cd Ariawallet
+   cd AriWallet
    ```
    
 2. **Install Node.js:**
