@@ -1,5 +1,5 @@
 # AriChain Bot
-   .aMMMb  dMMMMb  .aMMMb  dMP dMP dMP dMMMMb          
+   aMMMb  dMMMMb  .aMMMb  dMP dMP dMP dMMMMb          
   dMP"VMP dMP.dMP dMP"dMP dMP dMP dMP dMP dMP          
  dMP     dMMMMK" dMP dMP dMP dMP dMP dMP dMP           
 dMP.aMP dMP"AMF dMP.aMP dMP.dMP.dMP dMP dMP            
