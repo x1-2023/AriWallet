@@ -1,6 +1,4 @@
 # AriChain Bot
-
-banner = `
    .aMMMb  dMMMMb  .aMMMb  dMP dMP dMP dMMMMb          
   dMP"VMP dMP.dMP dMP"dMP dMP dMP dMP dMP dMP          
  dMP     dMMMMK" dMP dMP dMP dMP dMP dMP dMP           
