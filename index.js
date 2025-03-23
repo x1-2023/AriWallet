@@ -68,7 +68,7 @@ const loadAccounts = async (file = 'accounts.json') => {
     }
 };
 
-// Telegram Integration
+// Telegram Integration 
 const sendQuizButtons = async (question, options) => {
     try {
         const buttons = Markup.inlineKeyboard(
