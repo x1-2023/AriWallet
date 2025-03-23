@@ -75,7 +75,7 @@ const sendQuizButtons = async (question, options) => {
             options.map(opt => [Markup.button.callback(opt.text, opt.answer)])
         );
         await bot.telegram.sendMessage(TELEGRAM_ID, question, buttons);
-        console.log(`Quiz sent to your telegram, : ${question}`);
+        console.log(`Quiz sent to your telegram: ${question}`);
     } catch (error) {
         console.error('Failed to send quiz:', error.response?.description || error.message);
         console.error('Chat ID attempted:', TELEGRAM_ID);
@@ -83,7 +83,7 @@ const sendQuizButtons = async (question, options) => {
 };
 
 // Process Account Data
-const processAccount = async (account, sendQuiz = true, quizId = null, answerId = null) => {
+const processAccount = async (account, quizData = null, answerData = null) => {
     const accountInfo = await checkAccount(account.email);
     if (!accountInfo.success || !accountInfo.data.result?.[0]) return null;
 
@@ -91,20 +91,15 @@ const processAccount = async (account, sendQuiz = true, quizId = null, answerId 
     const checkIn = await performCheckIn(wallet.account);
     
     let quizStatus = 'Waiting for quiz';
-    if (sendQuiz) {
-        const quiz = await fetchQuiz(wallet.account);
-        if (quiz.success) {
-            const options = quiz.data.result.quiz_q.map(q => ({
-                text: q.question,
-                answer: `answer_${quiz.data.result.quiz_idx}_${q.q_idx}`
-            }));
-            await sendQuizButtons(quiz.data.result.quiz_title, options);
-        }
-    }
     
-    if (quizId && answerId) {
-        const quizResult = await submitQuiz(wallet.account, quizId, answerId);
+    // If answerData exists, submit quiz answer
+    if (answerData) {
+        const quizResult = await submitQuiz(wallet.account, answerData.quizId, answerData.answerId);
         quizStatus = quizResult.success ? quizResult.data.result.msg : 'Quiz error';
+    }
+    // If no answer data but quizData exists, use that for status
+    else if (quizData) {
+        quizStatus = 'Quiz available';
     }
 
     return {
@@ -115,7 +110,8 @@ const processAccount = async (account, sendQuiz = true, quizId = null, answerId 
         quiz: quizStatus,
         checkIn: checkIn.success && checkIn.data.status !== 'fail' 
             ? 'Checked in' 
-            : checkIn.data?.msg || 'Check-in failed'
+            : checkIn.data?.msg || 'Check-in failed',
+        wallet: wallet // Return full wallet data for later use
     };
 };
 
@@ -140,11 +136,37 @@ VMMMP" dMP dMP  VMMMP"  VMMMPVMMP" dMP dMP
     while (true) {
         try {
             const accounts = await loadAccounts();
-            const results = await Promise.all(
+            
+            // First process all accounts without quiz
+            const accountResults = await Promise.all(
                 accounts.map(acc => processAccount(acc))
             );
             
-            console.table(results.filter(r => r));
+            // Filter valid results
+            const validResults = accountResults.filter(r => r);
+            
+            // Only fetch quiz once using the first account
+            if (validResults.length > 0) {
+                const firstWallet = validResults[0].wallet;
+                const quiz = await fetchQuiz(firstWallet.account);
+                
+                // If quiz is available, send it only once
+                if (quiz.success && quiz.data.result) {
+                    const options = quiz.data.result.quiz_q.map(q => ({
+                        text: q.question,
+                        answer: `answer_${quiz.data.result.quiz_idx}_${q.q_idx}`
+                    }));
+                    
+                    await sendQuizButtons(quiz.data.result.quiz_title, options);
+                    
+                    // Update quiz status for all accounts
+                    validResults.forEach(result => {
+                        result.quiz = 'Quiz sent to Telegram';
+                    });
+                }
+            }
+            
+            console.table(validResults);
             console.log(chalk.green('Cycle completed, waiting 24 hours...'));
             
             await new Promise(resolve => setTimeout(resolve, 24 * 60 * 60 * 1000));
@@ -160,12 +182,14 @@ bot.on('callback_query', async (ctx) => {
     const [_, quizId, answerId] = ctx.callbackQuery.data.split('_');
     const accounts = await loadAccounts();
     
+    // Process all accounts with the same answer
+    const answerData = { quizId, answerId };
     const results = await Promise.all(
-        accounts.map(acc => processAccount(acc, false, quizId, answerId))
+        accounts.map(acc => processAccount(acc, null, answerData))
     );
     
     console.table(results.filter(r => r));
-    ctx.reply('Answer submitted');
+    ctx.reply('Answer submitted for all accounts');
     ctx.answerCbQuery();
 });
 
